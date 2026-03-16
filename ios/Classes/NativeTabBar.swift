@@ -48,6 +48,7 @@ struct TabBarConfig: Equatable {
 	var actionButtonSymbol: String = ""  // Default to empty
 	var tintColor: UIColor = .systemBlue
 	var selectedIndex: Int = 0
+	var isDark: Bool = false
 
 	init(from dict: [String: Any]?) {
 		guard let dict = dict else { return }
@@ -63,6 +64,9 @@ struct TabBarConfig: Equatable {
 		}
 		if let idx = dict["selectedIndex"] as? Int {
 			self.selectedIndex = idx
+		}
+		if let isDark = dict["isDark"] as? Bool {
+			self.isDark = isDark
 		}
 	}
 
@@ -83,6 +87,7 @@ struct TabBarConfig: Equatable {
 class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegate {
 	private let channel: FlutterMethodChannel
 	private var config: TabBarConfig
+	private var currentAppearanceIsDark: Bool
 
 	init(viewId: Int64, messenger: FlutterBinaryMessenger, args: Any?) {
 		self.channel = FlutterMethodChannel(
@@ -90,6 +95,7 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 			binaryMessenger: messenger
 		)
 		self.config = TabBarConfig(from: args as? [String: Any])
+		self.currentAppearanceIsDark = config.isDark
 		super.init(nibName: nil, bundle: nil)
 	}
 
@@ -103,6 +109,7 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 		self.view.backgroundColor = .clear
 		self.view.isOpaque = false
 		self.delegate = self
+		overrideUserInterfaceStyle = config.isDark ? .dark : .light
 
 		configureAppearance()
 		performFullRebuild()
@@ -122,6 +129,7 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 		appearance.configureWithDefaultBackground()
 		appearance.backgroundColor = .clear
 		appearance.shadowColor = .clear
+		appearance.backgroundEffect = UIBlurEffect(style: config.isDark ? .dark : .light)
 
 		let itemAppearance = UITabBarItemAppearance()
 		itemAppearance.normal.iconColor = .systemGray
@@ -214,8 +222,14 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 	}
 
 	private func updateSelectionAndColors() {
-		if tabBar.tintColor != config.tintColor {
+		let needsAppearanceUpdate =
+			tabBar.tintColor != config.tintColor
+			|| currentAppearanceIsDark != config.isDark
+
+		if needsAppearanceUpdate {
 			tabBar.tintColor = config.tintColor
+			currentAppearanceIsDark = config.isDark
+			overrideUserInterfaceStyle = config.isDark ? .dark : .light
 			configureAppearance()
 		}
 
