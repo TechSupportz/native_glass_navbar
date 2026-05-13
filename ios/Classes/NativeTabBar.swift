@@ -218,8 +218,15 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 	/// `tintColor` for the selected state and `systemGray` for the normal
 	/// state — matching the SF Symbol rendering path.
 	private func resolveIcon(symbol: String, bytes: Data?) -> UIImage? {
-		if let data = bytes, let image = UIImage(data: data) {
-			return image.withRenderingMode(.alwaysTemplate)
+		if let data = bytes {
+			// Bytes from Flutter are a high-resolution raster (~96px). Without
+			// an explicit scale, UIKit treats them as 1pt-per-pixel and the
+			// glyph blows up to fill the tab. Forcing scale = 3.0 means a 75px
+			// PNG renders at the standard 25pt tab bar icon size; larger source
+			// rasters scale down proportionally and stay crisp on @3x devices.
+			if let image = UIImage(data: data, scale: 3.0) {
+				return image.withRenderingMode(.alwaysTemplate)
+			}
 		}
 		if !symbol.isEmpty {
 			return (UIImage(systemName: symbol) ?? UIImage(named: symbol))?

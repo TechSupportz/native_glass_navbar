@@ -69,11 +69,15 @@ class TabBarActionButton {
 /// UIKit template image. Renders the glyph in solid white; UIKit applies
 /// the bar's tint colour at runtime.
 ///
+/// The default [size] of 75 pixels matches the standard 25 pt tab bar icon
+/// at @3x rendering — the Swift side decodes with `scale: 3.0`. Override
+/// only if you need a larger source raster (e.g. for non-tab-bar uses).
+///
 /// Cached internally by the widget; you generally don't need to call this
 /// directly. Exposed for tests and advanced use.
 Future<Uint8List> rasteriseIconData(
   IconData icon, {
-  double size = 96,
+  double size = 75,
 }) async {
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder);
