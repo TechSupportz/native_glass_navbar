@@ -45,7 +45,13 @@ class NativeTabBarPlatformView: NSObject, FlutterPlatformView {
 struct TabBarConfig: Equatable {
 	var labels: [String] = []
 	var symbols: [String] = []
-	var actionButtonSymbol: String = ""  // Default to empty
+	/// PNG bytes for each tab icon, aligned with `symbols`. A nil entry
+	/// means "use the SF symbol at the same index instead".
+	var iconBytes: [Data?] = []
+	var actionButtonSymbol: String = ""
+	/// PNG bytes for the action-button icon, if provided.
+	var actionButtonIconBytes: Data? = nil
+	var hasActionButton: Bool = false
 	var tintColor: UIColor = .systemBlue
 	var selectedIndex: Int = 0
 	var isDark: Bool = false
@@ -55,8 +61,28 @@ struct TabBarConfig: Equatable {
 		if let l = dict["labels"] as? [String] { self.labels = l }
 		if let s = dict["symbols"] as? [String] { self.symbols = s }
 
+		if let bytes = dict["iconBytes"] as? [Any] {
+			self.iconBytes = bytes.map { entry in
+				if let typed = entry as? FlutterStandardTypedData {
+					return typed.data
+				}
+				return nil
+			}
+		}
+
 		if let action = dict["actionButtonSymbol"] as? String {
 			self.actionButtonSymbol = action
+		}
+		if let actionBytes = dict["actionButtonIconBytes"] as? FlutterStandardTypedData {
+			self.actionButtonIconBytes = actionBytes.data
+		}
+
+		// Backwards compatible: if `hasActionButton` is missing, infer it
+		// from the symbol being non-empty (the v1.0.x contract).
+		if let flag = dict["hasActionButton"] as? Bool {
+			self.hasActionButton = flag
+		} else {
+			self.hasActionButton = !self.actionButtonSymbol.isEmpty
 		}
 
 		if let colorInt = dict["tintColor"] as? NSNumber {
@@ -71,8 +97,10 @@ struct TabBarConfig: Equatable {
 	}
 
 	func structuralChange(from other: TabBarConfig) -> Bool {
-		return labels.count != other.labels.count || symbols.count != other.symbols.count
-			|| (actionButtonSymbol.isEmpty != other.actionButtonSymbol.isEmpty)
+		return labels.count != other.labels.count
+			|| symbols.count != other.symbols.count
+			|| iconBytes.count != other.iconBytes.count
+			|| hasActionButton != other.hasActionButton
 	}
 
 	private static func uiColorFromARGB(_ argb: Int) -> UIColor {
@@ -157,15 +185,23 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 				self.config = newConfig
 				performFullRebuild()  // Destructive
 			} else {
-				// 2. Light Updates (In-Place)
+				// Light updates (in-place).
 				self.config = newConfig
 
-				// A. Update Colors
 				updateSelectionAndColors()
 
-				// B. Update Symbol In-Place (Fixes Jank)
-				if oldConfig.actionButtonSymbol != newConfig.actionButtonSymbol {
-					updateActionSymbolInPlace()
+				// Action-button icon swap.
+				let actionSymbolChanged =
+					oldConfig.actionButtonSymbol != newConfig.actionButtonSymbol
+				let actionBytesChanged =
+					oldConfig.actionButtonIconBytes != newConfig.actionButtonIconBytes
+				if actionSymbolChanged || actionBytesChanged {
+					updateActionIconInPlace()
+				}
+
+				// Tab icon swap (bytes only — symbols are static once mounted).
+				if oldConfig.iconBytes != newConfig.iconBytes {
+					updateTabIconsInPlace()
 				}
 			}
 
@@ -175,13 +211,40 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 		}
 	}
 
-	// Updates the icon without destroying the TabBarItem
-	private func updateActionSymbolInPlace() {
-		guard let vcs = self.viewControllers else { return }
+	// MARK: - Icon resolution
 
-		// Find the action button (Tag 99)
+	/// Resolves an icon from either raw PNG bytes (preferred) or an SF Symbol
+	/// name. Returns a template image so UIKit can tint it via the bar's
+	/// `tintColor` for the selected state and `systemGray` for the normal
+	/// state — matching the SF Symbol rendering path.
+	private func resolveIcon(symbol: String, bytes: Data?) -> UIImage? {
+		if let data = bytes, let image = UIImage(data: data) {
+			return image.withRenderingMode(.alwaysTemplate)
+		}
+		if !symbol.isEmpty {
+			return (UIImage(systemName: symbol) ?? UIImage(named: symbol))?
+				.withRenderingMode(.alwaysTemplate)
+		}
+		return nil
+	}
+
+	// Updates the action-button icon without destroying the TabBarItem.
+	private func updateActionIconInPlace() {
+		guard let vcs = self.viewControllers else { return }
 		if let actionVC = vcs.first(where: { $0.tabBarItem.tag == 99 }) {
-			actionVC.tabBarItem.image = resolveSymbol(config.actionButtonSymbol)
+			actionVC.tabBarItem.image = resolveIcon(
+				symbol: config.actionButtonSymbol,
+				bytes: config.actionButtonIconBytes
+			)
+		}
+	}
+
+	private func updateTabIconsInPlace() {
+		guard let vcs = self.viewControllers else { return }
+		for (i, vc) in vcs.enumerated() where vc.tabBarItem.tag != 99 {
+			let symbol = i < config.symbols.count ? config.symbols[i] : ""
+			let bytes = i < config.iconBytes.count ? config.iconBytes[i] : nil
+			vc.tabBarItem.image = resolveIcon(symbol: symbol, bytes: bytes)
 		}
 	}
 
@@ -189,29 +252,33 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 		var controllers: [UIViewController] = []
 		let count = max(config.labels.count, config.symbols.count)
 
-		// Standard Tabs
+		// Standard tabs.
 		for i in 0..<count {
 			let dummyVC = UIViewController()
 			dummyVC.view.backgroundColor = .clear
 
-			let symbolName = i < config.symbols.count ? config.symbols[i] : "questionmark"
+			let symbolName = i < config.symbols.count ? config.symbols[i] : ""
 			let label = i < config.labels.count ? config.labels[i] : ""
+			let bytes = i < config.iconBytes.count ? config.iconBytes[i] : nil
 
 			dummyVC.tabBarItem = UITabBarItem(
 				title: label,
-				image: resolveSymbol(symbolName),
+				image: resolveIcon(symbol: symbolName, bytes: bytes),
 				tag: i
 			)
 			controllers.append(dummyVC)
 		}
 
-		// Action Button
-		if !config.actionButtonSymbol.isEmpty {
+		// Action button.
+		if config.hasActionButton {
 			let actionVC = UIViewController()
 			actionVC.view.backgroundColor = .clear
 
 			let item = UITabBarItem(tabBarSystemItem: .search, tag: 99)
-			item.image = resolveSymbol(config.actionButtonSymbol)
+			item.image = resolveIcon(
+				symbol: config.actionButtonSymbol,
+				bytes: config.actionButtonIconBytes
+			)
 
 			actionVC.tabBarItem = item
 			controllers.append(actionVC)
@@ -242,10 +309,6 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 			}
 		}
 	}
-    
-    private func resolveSymbol(_ name: String) -> UIImage? {
-        return UIImage(systemName: name) ?? UIImage(named: name)
-    }
 
 	// MARK: - Delegate
 	func tabBarController(
