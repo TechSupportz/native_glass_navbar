@@ -237,7 +237,13 @@ class _NativeGlassNavBarState extends State<NativeGlassNavBar> {
   void initState() {
     super.initState();
     _supportLiquidGlassFuture = checkLiquidGlassSupport();
-    unawaited(_renderIcons());
+    // Rasterise after the first frame so that any custom icon font
+    // (Lucide, Material, etc.) has had a chance to load. Calling
+    // [rasteriseIconData] before the engine has loaded the font produces
+    // a blank PNG, which is invisible inside the native UITabBarItem.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_renderIcons());
+    });
   }
 
   @override
