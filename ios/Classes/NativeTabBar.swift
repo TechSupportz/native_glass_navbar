@@ -86,7 +86,7 @@ struct TabBarConfig: Equatable {
 		}
 
 		if let colorInt = dict["tintColor"] as? NSNumber {
-			self.tintColor = TabBarConfig.uiColorFromARGB(colorInt.intValue)
+			self.tintColor = IconResolver.uiColorFromARGB(colorInt.intValue)
 		}
 		if let idx = dict["selectedIndex"] as? Int {
 			self.selectedIndex = idx
@@ -103,13 +103,6 @@ struct TabBarConfig: Equatable {
 			|| hasActionButton != other.hasActionButton
 	}
 
-	private static func uiColorFromARGB(_ argb: Int) -> UIColor {
-		let a = CGFloat((argb >> 24) & 0xFF) / 255.0
-		let r = CGFloat((argb >> 16) & 0xFF) / 255.0
-		let g = CGFloat((argb >> 8) & 0xFF) / 255.0
-		let b = CGFloat(argb & 0xFF) / 255.0
-		return UIColor(red: r, green: g, blue: b, alpha: a)
-	}
 }
 
 class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegate {
@@ -211,35 +204,13 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 		}
 	}
 
-	// MARK: - Icon resolution
-
-	/// Resolves an icon from either raw PNG bytes (preferred) or an SF Symbol
-	/// name. Returns a template image so UIKit can tint it via the bar's
-	/// `tintColor` for the selected state and `systemGray` for the normal
-	/// state — matching the SF Symbol rendering path.
-	private func resolveIcon(symbol: String, bytes: Data?) -> UIImage? {
-		if let data = bytes {
-			// Bytes from Flutter are a high-resolution raster (~96px). Without
-			// an explicit scale, UIKit treats them as 1pt-per-pixel and the
-			// glyph blows up to fill the tab. Forcing scale = 3.0 means a 75px
-			// PNG renders at the standard 25pt tab bar icon size; larger source
-			// rasters scale down proportionally and stay crisp on @3x devices.
-			if let image = UIImage(data: data, scale: 3.0) {
-				return image.withRenderingMode(.alwaysTemplate)
-			}
-		}
-		if !symbol.isEmpty {
-			return (UIImage(systemName: symbol) ?? UIImage(named: symbol))?
-				.withRenderingMode(.alwaysTemplate)
-		}
-		return nil
-	}
+	// MARK: - Icon resolution (delegates to shared IconResolver)
 
 	// Updates the action-button icon without destroying the TabBarItem.
 	private func updateActionIconInPlace() {
 		guard let vcs = self.viewControllers else { return }
 		if let actionVC = vcs.first(where: { $0.tabBarItem.tag == 99 }) {
-			actionVC.tabBarItem.image = resolveIcon(
+			actionVC.tabBarItem.image = IconResolver.resolve(
 				symbol: config.actionButtonSymbol,
 				bytes: config.actionButtonIconBytes
 			)
@@ -251,7 +222,7 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 		for (i, vc) in vcs.enumerated() where vc.tabBarItem.tag != 99 {
 			let symbol = i < config.symbols.count ? config.symbols[i] : ""
 			let bytes = i < config.iconBytes.count ? config.iconBytes[i] : nil
-			vc.tabBarItem.image = resolveIcon(symbol: symbol, bytes: bytes)
+			vc.tabBarItem.image = IconResolver.resolve(symbol: symbol, bytes: bytes)
 		}
 	}
 
@@ -270,7 +241,7 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 
 			dummyVC.tabBarItem = UITabBarItem(
 				title: label,
-				image: resolveIcon(symbol: symbolName, bytes: bytes),
+				image: IconResolver.resolve(symbol: symbolName, bytes: bytes),
 				tag: i
 			)
 			controllers.append(dummyVC)
@@ -282,7 +253,7 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 			actionVC.view.backgroundColor = .clear
 
 			let item = UITabBarItem(tabBarSystemItem: .search, tag: 99)
-			item.image = resolveIcon(
+			item.image = IconResolver.resolve(
 				symbol: config.actionButtonSymbol,
 				bytes: config.actionButtonIconBytes
 			)

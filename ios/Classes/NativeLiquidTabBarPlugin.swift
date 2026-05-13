@@ -7,8 +7,11 @@ public class NativeLiquidTabBarPlugin: NSObject, FlutterPlugin {
     let instance = NativeLiquidTabBarPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
 
-    let factory = NativeTabBarFactory(messenger: registrar.messenger())
-    registrar.register(factory, withId: "NativeTabBar")
+    let tabBarFactory = NativeTabBarFactory(messenger: registrar.messenger())
+    registrar.register(tabBarFactory, withId: "NativeTabBar")
+
+    let buttonFactory = NativeGlassButtonFactory(messenger: registrar.messenger())
+    registrar.register(buttonFactory, withId: "NativeGlassButton")
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {

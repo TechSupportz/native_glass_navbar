@@ -1,3 +1,8 @@
+## 1.2.0-dev.1
+
+- New `NativeGlassButton` widget: a circular, natively-rendered icon button with a Liquid Glass backdrop on iOS 26+ and a system-material blur fallback on iOS 15–25. Accepts the same `symbol` / `iconData` pair as `NativeGlassNavBarItem`. Wrap in `SizedBox` (or any constraint) to size it.
+- Extracted shared icon resolution into `IconResolver` (Swift) so future glass primitives reuse the same bytes/symbol/asset fallback chain.
+
 ## 1.1.0-dev.1
 
 - Added `iconData` field to `NativeGlassNavBarItem` and `TabBarActionButton`. Pass any Flutter `IconData` (Lucide, Material, Cupertino, custom icon fonts) and the plugin rasterises it on-the-fly into a UIKit template image. SF Symbols still work — supply whichever fits.
