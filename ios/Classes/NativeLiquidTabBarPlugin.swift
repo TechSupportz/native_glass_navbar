@@ -12,6 +12,9 @@ public class NativeLiquidTabBarPlugin: NSObject, FlutterPlugin {
 
     let buttonFactory = NativeGlassButtonFactory(messenger: registrar.messenger())
     registrar.register(buttonFactory, withId: "NativeGlassButton")
+
+    let pillFactory = NativeGlassPillFactory(messenger: registrar.messenger())
+    registrar.register(pillFactory, withId: "NativeGlassPill")
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {

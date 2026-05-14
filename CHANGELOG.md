@@ -1,3 +1,7 @@
+## 1.3.0-dev.1
+
+- New `NativeGlassPill` widget: capsule-shaped native glass badge with optional leading icon. Pass `onTap` for the iOS 26 interactive `UIButton.Configuration.glass()` (or `.prominentGlass()` via `prominent: true`); omit it for a static decoration backed by `UIVisualEffectView(.systemMaterial)`. Same `symbol` / `iconData` API as the rest of the kit.
+
 ## 1.2.0-dev.2
 
 - `NativeGlassButton` now uses `UIButton.Configuration.glass()` on iOS 26+, opting into UIKit's interactive Liquid Glass treatment: press-down scale, spring return, and material refraction shift are handled by the OS instead of a static blur. iOS 15–25 unchanged (still the systemMaterial fallback).

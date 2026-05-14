@@ -3,6 +3,7 @@ library native_glass_navbar;
 
 export 'liquid_glass_helper.dart';
 export 'native_glass_button.dart';
+export 'native_glass_pill.dart';
 
 import 'dart:async';
 import 'dart:developer' as developer;
