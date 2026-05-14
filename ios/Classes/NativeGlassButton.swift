@@ -101,16 +101,22 @@ private final class GlassContainerView: UIView {
 	}
 }
 
-/// A circular icon button hosted natively. Backed by a `UIVisualEffectView`
-/// with a system-material blur — iOS 26+ automatically upgrades that backdrop
-/// to Liquid Glass (true refraction + adaptive tinting). On iOS 15–25 the
-/// same view renders the older frosted blur, so the recipe is one source
-/// of truth across versions.
+/// A circular icon button hosted natively.
+///
+/// On **iOS 26+**: uses `UIButton.Configuration.glass()` — the dedicated
+/// Liquid Glass button configuration. UIKit handles the press animation,
+/// material refraction shift, and spring scale for free. This is the same
+/// API Apple's first-party apps use for floating glass controls.
+///
+/// On **iOS 15–25**: falls back to a `UIVisualEffectView` with a system
+/// material blur, with a plain `UIButton` on top. Static glass — visually
+/// close but no interactive material response.
 class NativeGlassButtonPlatformView: NSObject, FlutterPlatformView {
-	private let container: GlassContainerView
+	private let hostView: UIView
 	private let channel: FlutterMethodChannel
 	private var config: GlassButtonConfig
 	private let button: UIButton
+	private let usesNativeGlass: Bool
 
 	init(frame: CGRect, viewId: Int64, args: Any?, messenger: FlutterBinaryMessenger) {
 		self.config = GlassButtonConfig(from: args as? [String: Any])
@@ -118,20 +124,31 @@ class NativeGlassButtonPlatformView: NSObject, FlutterPlatformView {
 			name: "NativeGlassButton_\(viewId)",
 			binaryMessenger: messenger
 		)
-		self.container = GlassContainerView(isDark: config.isDark)
-		self.button = UIButton(type: .system)
+
+		if #available(iOS 26.0, *) {
+			self.usesNativeGlass = true
+			var btnConfig = UIButton.Configuration.glass()
+			// `.capsule` makes the corner radius track the shorter dimension —
+			// for a square host view this collapses to a full circle.
+			btnConfig.cornerStyle = .capsule
+			self.button = UIButton(configuration: btnConfig)
+			self.hostView = UIView(frame: frame)
+		} else {
+			self.usesNativeGlass = false
+			self.button = UIButton(type: .system)
+			self.hostView = GlassContainerView(isDark: config.isDark)
+		}
 
 		super.init()
 
-		// Place the button on top of the blur, filling the container.
 		button.translatesAutoresizingMaskIntoConstraints = false
 		button.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
-		container.addSubview(button)
+		hostView.addSubview(button)
 		NSLayoutConstraint.activate([
-			button.topAnchor.constraint(equalTo: container.topAnchor),
-			button.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-			button.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-			button.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+			button.topAnchor.constraint(equalTo: hostView.topAnchor),
+			button.leadingAnchor.constraint(equalTo: hostView.leadingAnchor),
+			button.trailingAnchor.constraint(equalTo: hostView.trailingAnchor),
+			button.bottomAnchor.constraint(equalTo: hostView.bottomAnchor),
 		])
 
 		applyConfig()
@@ -141,14 +158,20 @@ class NativeGlassButtonPlatformView: NSObject, FlutterPlatformView {
 		}
 	}
 
-	func view() -> UIView { container }
+	func view() -> UIView { hostView }
 
 	private func applyConfig() {
-		button.tintColor = config.iconColor
-		button.setImage(
-			IconResolver.resolve(symbol: config.symbol, bytes: config.iconBytes),
-			for: .normal
-		)
+		let icon = IconResolver.resolve(symbol: config.symbol, bytes: config.iconBytes)
+
+		if usesNativeGlass, #available(iOS 26.0, *) {
+			var btnConfig = button.configuration ?? UIButton.Configuration.glass()
+			btnConfig.image = icon
+			btnConfig.baseForegroundColor = config.iconColor
+			button.configuration = btnConfig
+		} else {
+			button.tintColor = config.iconColor
+			button.setImage(icon, for: .normal)
+		}
 	}
 
 	@objc private func buttonTapped() {

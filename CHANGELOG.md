@@ -1,3 +1,7 @@
+## 1.2.0-dev.2
+
+- `NativeGlassButton` now uses `UIButton.Configuration.glass()` on iOS 26+, opting into UIKit's interactive Liquid Glass treatment: press-down scale, spring return, and material refraction shift are handled by the OS instead of a static blur. iOS 15–25 unchanged (still the systemMaterial fallback).
+
 ## 1.2.0-dev.1
 
 - New `NativeGlassButton` widget: a circular, natively-rendered icon button with a Liquid Glass backdrop on iOS 26+ and a system-material blur fallback on iOS 15–25. Accepts the same `symbol` / `iconData` pair as `NativeGlassNavBarItem`. Wrap in `SizedBox` (or any constraint) to size it.
