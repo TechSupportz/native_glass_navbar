@@ -107,6 +107,23 @@ class _NativeGlassPillState extends State<NativeGlassPill> {
     _channel?.invokeMethod('update', _createParams());
   }
 
+  /// Computes the required pill width from the text label.
+  /// UiKitView reports 0 intrinsic width, so we measure on the Flutter side.
+  /// UIKit .footnote ≈ 13 sp; add 14px horizontal padding each side + icon.
+  double _measurePillWidth(BuildContext context) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: widget.text,
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final hasIcon = _renderedIcon != null ||
+        (widget.symbol != null && widget.symbol!.isNotEmpty);
+    final iconWidth = hasIcon ? 22.0 : 0.0; // 16px icon + 6px gap
+    return (painter.width + iconWidth + 28).clamp(48.0, 280.0);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -153,22 +170,24 @@ class _NativeGlassPillState extends State<NativeGlassPill> {
           return const SizedBox.shrink();
         }
 
-        return IntrinsicWidth(
-          child: SizedBox(
-            height: 28,
-            child: UiKitView(
-              viewType: 'NativeGlassPill',
-              creationParams: _createParams(),
-              creationParamsCodec: const StandardMessageCodec(),
-              onPlatformViewCreated: (id) {
-                _channel = MethodChannel('NativeGlassPill_$id');
-                _channel!.setMethodCallHandler((call) async {
-                  if (call.method == 'pillPressed') {
-                    widget.onTap?.call();
-                  }
-                });
-              },
-            ),
+        // UiKitView doesn't implement intrinsic sizing, so IntrinsicWidth
+        // resolves to 0 and the pill is invisible. Measure text explicitly.
+        final pillWidth = _measurePillWidth(context);
+        return SizedBox(
+          width: pillWidth,
+          height: 28,
+          child: UiKitView(
+            viewType: 'NativeGlassPill',
+            creationParams: _createParams(),
+            creationParamsCodec: const StandardMessageCodec(),
+            onPlatformViewCreated: (id) {
+              _channel = MethodChannel('NativeGlassPill_$id');
+              _channel!.setMethodCallHandler((call) async {
+                if (call.method == 'pillPressed') {
+                  widget.onTap?.call();
+                }
+              });
+            },
           ),
         );
       },
