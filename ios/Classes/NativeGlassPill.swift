@@ -162,6 +162,7 @@ class NativeGlassPillPlatformView: NSObject, FlutterPlatformView {
 		if let button = button, #available(iOS 26.0, *) {
 			var btnConfig = button.configuration ?? UIButton.Configuration.glass()
 			btnConfig.image = icon
+			btnConfig.imagePlacement = .trailing
 			btnConfig.title = config.text
 			btnConfig.baseForegroundColor = config.foregroundColor
 			button.configuration = btnConfig
