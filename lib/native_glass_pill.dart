@@ -30,6 +30,7 @@ class NativeGlassPill extends StatefulWidget {
     this.prominent = false,
     this.foregroundColor,
     this.fallback,
+    this.height = 28,
   });
 
   /// Label text rendered inside the pill.
@@ -56,6 +57,10 @@ class NativeGlassPill extends StatefulWidget {
 
   /// Widget shown on non-iOS platforms or when Liquid Glass isn't supported.
   final Widget? fallback;
+
+  /// Height of the pill in logical pixels. Defaults to 28 (label/badge size).
+  /// Pass 44 to match the standard iOS button touch target.
+  final double height;
 
   @override
   State<NativeGlassPill> createState() => _NativeGlassPillState();
@@ -175,7 +180,7 @@ class _NativeGlassPillState extends State<NativeGlassPill> {
         final pillWidth = _measurePillWidth(context);
         return SizedBox(
           width: pillWidth,
-          height: 28,
+          height: widget.height,
           child: UiKitView(
             viewType: 'NativeGlassPill',
             creationParams: _createParams(),
