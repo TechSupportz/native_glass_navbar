@@ -139,7 +139,7 @@ class NativeGlassPillPlatformView: NSObject, FlutterPlatformView {
 		label.adjustsFontForContentSizeCategory = true
 		self.label = label
 
-		let stack = UIStackView(arrangedSubviews: [imageView, label])
+		let stack = UIStackView(arrangedSubviews: [label, imageView])
 		stack.axis = .horizontal
 		stack.spacing = 6
 		stack.alignment = .center
