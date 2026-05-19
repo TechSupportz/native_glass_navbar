@@ -109,19 +109,19 @@ class _NativeGlassPillState extends State<NativeGlassPill> {
 
   /// Computes the required pill width from the text label.
   /// UiKitView reports 0 intrinsic width, so we measure on the Flutter side.
-  /// UIKit .footnote ≈ 13 sp; add 14px horizontal padding each side + icon.
+  /// UIButton.Configuration.glass() uses .body (17 sp); add 20 px each side.
   double _measurePillWidth(BuildContext context) {
     final painter = TextPainter(
       text: TextSpan(
         text: widget.text,
-        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w400),
+        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w400),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
     final hasIcon = _renderedIcon != null ||
         (widget.symbol != null && widget.symbol!.isNotEmpty);
-    final iconWidth = hasIcon ? 22.0 : 0.0; // 16px icon + 6px gap
-    return (painter.width + iconWidth + 28).clamp(48.0, 280.0);
+    final iconWidth = hasIcon ? 26.0 : 0.0; // 16px icon + 10px gap
+    return (painter.width + iconWidth + 40).clamp(64.0, 300.0);
   }
 
   @override
