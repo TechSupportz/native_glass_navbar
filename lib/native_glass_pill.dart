@@ -31,6 +31,7 @@ class NativeGlassPill extends StatefulWidget {
     this.foregroundColor,
     this.fallback,
     this.height = 28,
+    this.width,
   });
 
   /// Label text rendered inside the pill.
@@ -61,6 +62,11 @@ class NativeGlassPill extends StatefulWidget {
   /// Height of the pill in logical pixels. Defaults to 28 (label/badge size).
   /// Pass 44 to match the standard iOS button touch target.
   final double height;
+
+  /// Optional explicit width override. When provided, skips text-based
+  /// measurement — useful when the pill contains non-text content (e.g.
+  /// progress dots rendered as a Flutter overlay).
+  final double? width;
 
   @override
   State<NativeGlassPill> createState() => _NativeGlassPillState();
@@ -176,8 +182,9 @@ class _NativeGlassPillState extends State<NativeGlassPill> {
         }
 
         // UiKitView doesn't implement intrinsic sizing, so IntrinsicWidth
-        // resolves to 0 and the pill is invisible. Measure text explicitly.
-        final pillWidth = _measurePillWidth(context);
+        // resolves to 0 and the pill is invisible. Measure text explicitly,
+        // or use the caller-supplied width override.
+        final pillWidth = widget.width ?? _measurePillWidth(context);
         return SizedBox(
           width: pillWidth,
           height: widget.height,
