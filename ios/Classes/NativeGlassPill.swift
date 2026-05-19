@@ -70,7 +70,8 @@ class NativeGlassPillPlatformView: NSObject, FlutterPlatformView {
 	private var imageView: UIImageView?
 
 	init(frame: CGRect, viewId: Int64, args: Any?, messenger: FlutterBinaryMessenger) {
-		self.config = GlassPillConfig(from: args as? [String: Any])
+		let config = GlassPillConfig(from: args as? [String: Any])
+		self.config = config
 		self.channel = FlutterMethodChannel(
 			name: "NativeGlassPill_\(viewId)",
 			binaryMessenger: messenger
@@ -78,7 +79,7 @@ class NativeGlassPillPlatformView: NSObject, FlutterPlatformView {
 
 		let useInteractiveGlass: Bool = {
 			if #available(iOS 26.0, *) {
-				return config.interactive
+				return config.interactive  // local var, no self access before super.init
 			}
 			return false
 		}()
@@ -158,7 +159,7 @@ class NativeGlassPillPlatformView: NSObject, FlutterPlatformView {
 	private func applyConfig() {
 		let icon = IconResolver.resolve(symbol: config.symbol, bytes: config.iconBytes)
 
-		if let button = button {
+		if let button = button, #available(iOS 26.0, *) {
 			var btnConfig = button.configuration ?? UIButton.Configuration.glass()
 			btnConfig.image = icon
 			btnConfig.title = config.text
