@@ -45,6 +45,7 @@ class NativeTabBarPlatformView: NSObject, FlutterPlatformView {
 struct TabBarConfig: Equatable {
 	var labels: [String] = []
 	var symbols: [String] = []
+	var selectedSymbols: [String] = []
 	var actionButtonSymbol: String = ""  // Default to empty
 	var tintColor: UIColor = .systemBlue
 	var selectedIndex: Int = 0
@@ -54,6 +55,11 @@ struct TabBarConfig: Equatable {
 		guard let dict = dict else { return }
 		if let l = dict["labels"] as? [String] { self.labels = l }
 		if let s = dict["symbols"] as? [String] { self.symbols = s }
+		if let s = dict["selectedSymbols"] as? [String] {
+			self.selectedSymbols = s
+		} else {
+			self.selectedSymbols = self.symbols
+		}
 
 		if let action = dict["actionButtonSymbol"] as? String {
 			self.actionButtonSymbol = action
@@ -72,6 +78,7 @@ struct TabBarConfig: Equatable {
 
 	func structuralChange(from other: TabBarConfig) -> Bool {
 		return labels.count != other.labels.count || symbols.count != other.symbols.count
+			|| selectedSymbols.count != other.selectedSymbols.count
 			|| (actionButtonSymbol.isEmpty != other.actionButtonSymbol.isEmpty)
 	}
 
@@ -167,6 +174,12 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 				if oldConfig.actionButtonSymbol != newConfig.actionButtonSymbol {
 					updateActionSymbolInPlace()
 				}
+
+				if oldConfig.symbols != newConfig.symbols
+					|| oldConfig.selectedSymbols != newConfig.selectedSymbols
+				{
+					updateTabSymbolsInPlace()
+				}
 			}
 
 			result(nil)
@@ -185,6 +198,21 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 		}
 	}
 
+	private func updateTabSymbolsInPlace() {
+		guard let vcs = self.viewControllers else { return }
+
+		for viewController in vcs where viewController.tabBarItem.tag != 99 {
+			let index = viewController.tabBarItem.tag
+			guard index >= 0, index < config.symbols.count else { continue }
+
+			let selectedSymbolName = index < config.selectedSymbols.count
+				? config.selectedSymbols[index]
+				: config.symbols[index]
+			viewController.tabBarItem.image = resolveSymbol(config.symbols[index])
+			viewController.tabBarItem.selectedImage = resolveSymbol(selectedSymbolName)
+		}
+	}
+
 	private func performFullRebuild() {
 		var controllers: [UIViewController] = []
 		let count = max(config.labels.count, config.symbols.count)
@@ -195,13 +223,18 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 			dummyVC.view.backgroundColor = .clear
 
 			let symbolName = i < config.symbols.count ? config.symbols[i] : "questionmark"
+			let selectedSymbolName = i < config.selectedSymbols.count
+				? config.selectedSymbols[i]
+				: symbolName
 			let label = i < config.labels.count ? config.labels[i] : ""
 
-			dummyVC.tabBarItem = UITabBarItem(
+			let tabBarItem = UITabBarItem(
 				title: label,
 				image: resolveSymbol(symbolName),
-				tag: i
+				selectedImage: resolveSymbol(selectedSymbolName)
 			)
+			tabBarItem.tag = i
+			dummyVC.tabBarItem = tabBarItem
 			controllers.append(dummyVC)
 		}
 

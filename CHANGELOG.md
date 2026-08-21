@@ -1,3 +1,10 @@
+## 1.0.2+1
+
+- Added an optional selected symbol for native tab bar items.
+- Forwarded gestures eagerly to the native UIKit view so taps preserve the
+  Liquid Glass interaction.
+- Updated tab symbols in place without rebuilding the native tab bar.
+
 ## 1.0.2
 
 - Fixed an issue where tab bar would briefly flash the wrong color when app theme differed from system theme.

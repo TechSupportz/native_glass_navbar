@@ -46,7 +46,11 @@ NativeGlassNavBar(
     });
   },
   tabs: const [
-    NativeGlassNavBarItem(label: 'Home', symbol: 'house'),
+    NativeGlassNavBarItem(
+      label: 'Home',
+      symbol: 'house',
+      selectedSymbol: 'house.fill',
+    ),
     NativeGlassNavBarItem(label: 'Search', symbol: 'magnifyingglass'),
     NativeGlassNavBarItem(label: 'Settings', symbol: 'gear'),
   ],
@@ -109,7 +113,8 @@ NativeGlassNavBar(
 
 ### NativeGlassNavBarItem
 
-| Parameter | Type     | Description                                                                                          |
-| --------- | -------- | ---------------------------------------------------------------------------------------------------- |
-| `label`   | `String` | Text label for the tab.                                                                              |
-| `symbol`  | `String` | [SF Symbol](https://developer.apple.com/sf-symbols/) name for the icon (e.g., 'house.fill', 'gear'). |
+| Parameter        | Type      | Description                                                                                          |
+| ---------------- | --------- | ---------------------------------------------------------------------------------------------------- |
+| `label`          | `String`  | Text label for the tab.                                                                              |
+| `symbol`         | `String`  | [SF Symbol](https://developer.apple.com/sf-symbols/) name for the normal icon (e.g., 'house').       |
+| `selectedSymbol` | `String?` | Optional SF Symbol for the selected icon (e.g., 'house.fill'). Defaults to `symbol`.                 |

@@ -1,10 +1,10 @@
-/// A Flutter plugin that provides a native liquid glass navigation bar for iOS.
-library native_glass_navbar;
+// A Flutter plugin that provides a native liquid glass navigation bar for iOS.
 
 export 'liquid_glass_helper.dart';
 
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:native_glass_navbar/liquid_glass_helper.dart';
@@ -17,8 +17,17 @@ class NativeGlassNavBarItem {
   /// The SF Symbol name to use for the tab icon.
   final String symbol;
 
+  /// The optional SF Symbol name to use while the tab is selected.
+  ///
+  /// When omitted, [symbol] is used for both states.
+  final String? selectedSymbol;
+
   /// Creates a new [NativeGlassNavBarItem].
-  const NativeGlassNavBarItem({required this.label, required this.symbol});
+  const NativeGlassNavBarItem({
+    required this.label,
+    required this.symbol,
+    this.selectedSymbol,
+  });
 }
 
 /// Represents an action button in the [NativeGlassNavBar].
@@ -106,6 +115,9 @@ class _NativeGlassNavBarState extends State<NativeGlassNavBar> {
     return {
       'labels': widget.tabs.map((e) => e.label).toList(),
       'symbols': widget.tabs.map((e) => e.symbol).toList(),
+      'selectedSymbols': widget.tabs
+          .map((e) => e.selectedSymbol ?? e.symbol)
+          .toList(),
       'actionButtonSymbol': widget.actionButton?.symbol,
       'selectedIndex': widget.currentIndex,
       'isDark': Theme.of(context).brightness == Brightness.dark,
@@ -162,6 +174,9 @@ class _NativeGlassNavBarState extends State<NativeGlassNavBar> {
             viewType: 'NativeTabBar',
             creationParams: _createParams(),
             creationParamsCodec: const StandardMessageCodec(),
+            gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+              Factory<EagerGestureRecognizer>(EagerGestureRecognizer.new),
+            },
             onPlatformViewCreated: (id) {
               _channel = MethodChannel('NativeTabBar_$id');
               _channel!.setMethodCallHandler((call) async {

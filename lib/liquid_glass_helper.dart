@@ -1,5 +1,4 @@
-/// A helper library for checking support for the native glass effect.
-library liquid_glass_helper;
+// A helper library for checking support for the native glass effect.
 
 import 'dart:io';
 import 'package:flutter/services.dart';
