@@ -4,14 +4,14 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'native_glass_navbar'
-  s.version          = '1.0.2.1'
-  s.summary          = 'A native iOS Liquid Glass navigation bar for Flutter.'
+  s.version          = '0.0.1'
+  s.summary          = 'A new Flutter plugin project.'
   s.description      = <<-DESC
-Renders a native UITabBar with the iOS Liquid Glass appearance inside Flutter.
+A new Flutter plugin project.
                        DESC
-  s.homepage         = 'https://github.com/TechSupportz/native_glass_navbar'
+  s.homepage         = 'http://example.com'
   s.license          = { :file => '../LICENSE' }
-  s.author           = 'TechSupportz'
+  s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
@@ -21,5 +21,9 @@ Renders a native UITabBar with the iOS Liquid Glass appearance inside Flutter.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
   s.swift_version = '5.0'
 
-  s.resource_bundles = {'native_glass_navbar_privacy' => ['Resources/PrivacyInfo.xcprivacy']}
+  # If your plugin requires a privacy manifest, for example if it uses any
+  # required reason APIs, update the PrivacyInfo.xcprivacy file to describe your
+  # plugin's privacy impact, and then uncomment this line. For more information,
+  # see https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
+  # s.resource_bundles = {'native_glass_navbar_privacy' => ['Resources/PrivacyInfo.xcprivacy']}
 end
