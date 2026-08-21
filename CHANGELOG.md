@@ -4,6 +4,9 @@
 - Forwarded gestures eagerly to the native UIKit view so taps preserve the
   Liquid Glass interaction.
 - Updated tab symbols in place without rebuilding the native tab bar.
+- Added selected-index validation and in-place label updates.
+- Cleaned up method-channel handlers when the native view is disposed.
+- Kept the fallback visible while Liquid Glass support is being resolved.
 
 ## 1.0.2
 

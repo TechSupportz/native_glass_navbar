@@ -82,7 +82,12 @@ class NativeGlassNavBar extends StatefulWidget {
     required this.onTap,
     this.tintColor,
     this.fallback,
-  }) : assert(
+  }) : assert(tabs.length > 0, 'NativeGlassNavBar requires at least one tab.'),
+       assert(
+         currentIndex >= 0 && currentIndex < tabs.length,
+         'currentIndex must point to an existing tab.',
+       ),
+       assert(
          tabs.length <= (actionButton == null ? 5 : 4),
          actionButton == null
              ? 'NativeGlassNavBar supports a maximum of 5 tabs.'
@@ -140,12 +145,19 @@ class _NativeGlassNavBarState extends State<NativeGlassNavBar> {
   }
 
   @override
+  void dispose() {
+    _channel?.setMethodCallHandler(null);
+    _channel = null;
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
       future: _supportLiquidGlassFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SizedBox.shrink();
+          return widget.fallback ?? const SizedBox.shrink();
         }
 
         if (snapshot.data != true) {

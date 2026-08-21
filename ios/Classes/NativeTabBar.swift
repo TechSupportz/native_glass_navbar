@@ -110,6 +110,10 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 		fatalError("init(coder:) has not been implemented")
 	}
 
+	deinit {
+		channel.setMethodCallHandler(nil)
+	}
+
 	override func viewDidLoad() {
 		super.viewDidLoad()
 
@@ -175,10 +179,11 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 					updateActionSymbolInPlace()
 				}
 
-				if oldConfig.symbols != newConfig.symbols
+				if oldConfig.labels != newConfig.labels
+					|| oldConfig.symbols != newConfig.symbols
 					|| oldConfig.selectedSymbols != newConfig.selectedSymbols
 				{
-					updateTabSymbolsInPlace()
+					updateTabItemsInPlace()
 				}
 			}
 
@@ -198,13 +203,16 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 		}
 	}
 
-	private func updateTabSymbolsInPlace() {
+	private func updateTabItemsInPlace() {
 		guard let vcs = self.viewControllers else { return }
 
 		for viewController in vcs where viewController.tabBarItem.tag != 99 {
 			let index = viewController.tabBarItem.tag
 			guard index >= 0, index < config.symbols.count else { continue }
 
+			viewController.tabBarItem.title = index < config.labels.count
+				? config.labels[index]
+				: ""
 			let selectedSymbolName = index < config.selectedSymbols.count
 				? config.selectedSymbols[index]
 				: config.symbols[index]
@@ -268,6 +276,7 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 
 		if self.selectedIndex != config.selectedIndex {
 			if let vcs = self.viewControllers,
+				config.selectedIndex >= 0,
 				config.selectedIndex < vcs.count,
 				vcs[config.selectedIndex].tabBarItem.tag != 99
 			{
