@@ -1,3 +1,8 @@
+## 1.0.3
+
+- Added Swift Package Manager support for iOS while retaining CocoaPods compatibility.
+- Shared native sources and the privacy manifest between both build systems.
+
 ## 1.0.2
 
 - Fixed an issue where tab bar would briefly flash the wrong color when app theme differed from system theme.

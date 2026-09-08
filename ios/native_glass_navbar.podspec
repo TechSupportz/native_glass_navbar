@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'native_glass_navbar'
-  s.version          = '1.0.2'
+  s.version          = '1.0.3'
   s.summary          = 'A Flutter plugin that brings the native iOS Liquid Glass style navigation bar to your Flutter apps.'
   s.description      = <<-DESC
 A Flutter plugin that brings the native iOS Liquid Glass style navigation bar to your Flutter apps.
