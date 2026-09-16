@@ -1,27 +1,55 @@
 import Flutter
-import UIKit
 import XCTest
 
-
-@testable import native_liquid_tab_bar
-
-// This demonstrates a simple unit test of the Swift portion of this plugin's implementation.
-//
-// See https://developer.apple.com/documentation/xctest for more information about using XCTest.
+@testable import native_glass_navbar
 
 class RunnerTests: XCTestCase {
+	func testTabConfigurationDecodesFromFlutterCodec() {
+		let payload: [String: Any] = [
+			"labels": ["Home", "Search"],
+			"symbols": ["house", "magnifyingglass"],
+			"actionButtonSymbol": "plus",
+			"selectedIndex": 1,
+		]
+		let codec = FlutterStandardMessageCodec.sharedInstance()
+		let decoded = codec.decode(codec.encode(payload)) as? [String: Any]
+		let config = TabBarConfig(from: decoded)
 
-  func testGetPlatformVersion() {
-    let plugin = NativeLiquidTabBarPlugin()
+		XCTAssertEqual(config.labels, ["Home", "Search"])
+		XCTAssertEqual(config.symbols, ["house", "magnifyingglass"])
+		XCTAssertEqual(config.actionButtonSymbol, "plus")
+		XCTAssertEqual(config.selectedIndex, 1)
+		XCTAssertEqual(config.standardItemCount, 2)
+		XCTAssertTrue(config.hasActionButton)
+	}
 
-    let call = FlutterMethodCall(methodName: "getPlatformVersion", arguments: [])
+	func testStructuralChangesDependOnTabCountAndActionPresence() {
+		let original = TabBarConfig(from: [
+			"labels": ["Home"],
+			"symbols": ["house"],
+		])
+		let updated = TabBarConfig(from: [
+			"labels": ["Start"],
+			"symbols": ["house.fill"],
+		])
+		let additionalTab = TabBarConfig(from: [
+			"labels": ["Home", "Search"],
+			"symbols": ["house", "magnifyingglass"],
+		])
+		let addedAction = TabBarConfig(from: [
+			"labels": ["Home"],
+			"symbols": ["house"],
+			"actionButtonSymbol": "plus",
+		])
+		let changedAction = TabBarConfig(from: [
+			"labels": ["Home"],
+			"symbols": ["house"],
+			"actionButtonSymbol": "pencil",
+		])
 
-    let resultExpectation = expectation(description: "result block must be called.")
-    plugin.handle(call) { result in
-      XCTAssertEqual(result as! String, "iOS " + UIDevice.current.systemVersion)
-      resultExpectation.fulfill()
-    }
-    waitForExpectations(timeout: 1)
-  }
-
+		XCTAssertFalse(updated.structuralChange(from: original))
+		XCTAssertTrue(additionalTab.structuralChange(from: original))
+		XCTAssertTrue(addedAction.structuralChange(from: original))
+		XCTAssertFalse(changedAction.structuralChange(from: addedAction))
+	}
 }

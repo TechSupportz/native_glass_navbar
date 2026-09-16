@@ -47,8 +47,17 @@ struct TabBarConfig: Equatable {
 	var symbols: [String] = []
 	var actionButtonSymbol: String = ""  // Default to empty
 	var tintColor: UIColor = .systemBlue
+	var tintColorARGB: Int = 0xFF007AFF
 	var selectedIndex: Int = 0
 	var isDark: Bool = false
+
+	var standardItemCount: Int {
+		return max(labels.count, symbols.count)
+	}
+
+	var hasActionButton: Bool {
+		return !actionButtonSymbol.isEmpty
+	}
 
 	init(from dict: [String: Any]?) {
 		guard let dict = dict else { return }
@@ -60,7 +69,8 @@ struct TabBarConfig: Equatable {
 		}
 
 		if let colorInt = dict["tintColor"] as? NSNumber {
-			self.tintColor = TabBarConfig.uiColorFromARGB(colorInt.intValue)
+			self.tintColorARGB = colorInt.intValue
+			self.tintColor = TabBarConfig.uiColorFromARGB(tintColorARGB)
 		}
 		if let idx = dict["selectedIndex"] as? Int {
 			self.selectedIndex = idx
@@ -71,8 +81,17 @@ struct TabBarConfig: Equatable {
 	}
 
 	func structuralChange(from other: TabBarConfig) -> Bool {
-		return labels.count != other.labels.count || symbols.count != other.symbols.count
-			|| (actionButtonSymbol.isEmpty != other.actionButtonSymbol.isEmpty)
+		return standardItemCount != other.standardItemCount
+			|| hasActionButton != other.hasActionButton
+	}
+
+	static func == (lhs: TabBarConfig, rhs: TabBarConfig) -> Bool {
+		return lhs.labels == rhs.labels
+			&& lhs.symbols == rhs.symbols
+			&& lhs.actionButtonSymbol == rhs.actionButtonSymbol
+			&& lhs.tintColorARGB == rhs.tintColorARGB
+			&& lhs.selectedIndex == rhs.selectedIndex
+			&& lhs.isDark == rhs.isDark
 	}
 
 	private static func uiColorFromARGB(_ argb: Int) -> UIColor {
@@ -85,9 +104,12 @@ struct TabBarConfig: Equatable {
 }
 
 class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegate {
+	private static let actionTabIdentifier = "native_glass_navbar.action"
+
 	private let channel: FlutterMethodChannel
 	private var config: TabBarConfig
 	private var currentAppearanceIsDark: Bool
+	private var currentTintColorARGB: Int
 
 	init(viewId: Int64, messenger: FlutterBinaryMessenger, args: Any?) {
 		self.channel = FlutterMethodChannel(
@@ -96,6 +118,7 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 		)
 		self.config = TabBarConfig(from: args as? [String: Any])
 		self.currentAppearanceIsDark = config.isDark
+		self.currentTintColorARGB = config.tintColorARGB
 		super.init(nibName: nil, bundle: nil)
 	}
 
@@ -153,6 +176,11 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 			let newConfig = TabBarConfig(from: dict)
 			let oldConfig = self.config
 
+			if newConfig == oldConfig {
+				result(nil)
+				return
+			}
+
 			if newConfig.structuralChange(from: oldConfig) {
 				self.config = newConfig
 				performFullRebuild()  // Destructive
@@ -160,13 +188,8 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 				// 2. Light Updates (In-Place)
 				self.config = newConfig
 
-				// A. Update Colors
+				updateTabItemsInPlace(from: oldConfig)
 				updateSelectionAndColors()
-
-				// B. Update Symbol In-Place (Fixes Jank)
-				if oldConfig.actionButtonSymbol != newConfig.actionButtonSymbol {
-					updateActionSymbolInPlace()
-				}
 			}
 
 			result(nil)
@@ -175,31 +198,89 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 		}
 	}
 
-	// Updates the icon without destroying the TabBarItem
-	private func updateActionSymbolInPlace() {
+	private func updateTabItemsInPlace(from oldConfig: TabBarConfig) {
+		if #available(iOS 27.0, *) {
+			updateModernTabsInPlace(from: oldConfig)
+			return
+		}
+
 		guard let vcs = self.viewControllers else { return }
 
-		// Find the action button (Tag 99)
-		if let actionVC = vcs.first(where: { $0.tabBarItem.tag == 99 }) {
+		for i in 0..<config.standardItemCount {
+			guard i < vcs.count, let item = vcs[i].tabBarItem else { continue }
+			let newLabel = label(at: i, in: config)
+			let newSymbol = symbol(at: i, in: config)
+
+			if newLabel != label(at: i, in: oldConfig) {
+				item.title = newLabel
+			}
+
+			if newSymbol != symbol(at: i, in: oldConfig) {
+				item.image = resolveSymbol(newSymbol)
+			}
+		}
+
+		if oldConfig.actionButtonSymbol != config.actionButtonSymbol,
+			let actionVC = vcs.first(where: { $0.tabBarItem.tag == 99 })
+		{
 			actionVC.tabBarItem.image = resolveSymbol(config.actionButtonSymbol)
 		}
 	}
 
+	@available(iOS 27.0, *)
+	private func updateModernTabsInPlace(from oldConfig: TabBarConfig) {
+		performBatchUpdates {
+			for i in 0..<config.standardItemCount {
+				guard let tab = tab(forIdentifier: tabIdentifier(at: i)) else { continue }
+				let newLabel = label(at: i, in: config)
+				let newSymbol = symbol(at: i, in: config)
+
+				if newLabel != label(at: i, in: oldConfig) {
+					tab.title = newLabel
+				}
+
+				if newSymbol != symbol(at: i, in: oldConfig) {
+					tab.image = resolveSymbol(newSymbol)
+				}
+			}
+
+			if oldConfig.actionButtonSymbol != config.actionButtonSymbol,
+				let actionTab = tab(forIdentifier: Self.actionTabIdentifier)
+			{
+				actionTab.image = resolveSymbol(config.actionButtonSymbol)
+			}
+		}
+	}
+
+	private func label(at index: Int, in config: TabBarConfig) -> String {
+		return index < config.labels.count ? config.labels[index] : ""
+	}
+
+	private func symbol(at index: Int, in config: TabBarConfig) -> String {
+		return index < config.symbols.count ? config.symbols[index] : "questionmark"
+	}
+
+	private func tabIdentifier(at index: Int) -> String {
+		return "native_glass_navbar.tab.\(index)"
+	}
+
 	private func performFullRebuild() {
+		if #available(iOS 27.0, *) {
+			performModernFullRebuild()
+			return
+		}
+
 		var controllers: [UIViewController] = []
-		let count = max(config.labels.count, config.symbols.count)
+		let count = config.standardItemCount
 
 		// Standard Tabs
 		for i in 0..<count {
 			let dummyVC = UIViewController()
 			dummyVC.view.backgroundColor = .clear
 
-			let symbolName = i < config.symbols.count ? config.symbols[i] : "questionmark"
-			let label = i < config.labels.count ? config.labels[i] : ""
-
 			dummyVC.tabBarItem = UITabBarItem(
-				title: label,
-				image: resolveSymbol(symbolName),
+				title: label(at: i, in: config),
+				image: resolveSymbol(symbol(at: i, in: config)),
 				tag: i
 			)
 			controllers.append(dummyVC)
@@ -221,20 +302,71 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 		updateSelectionAndColors()
 	}
 
+	@available(iOS 27.0, *)
+	private func performModernFullRebuild() {
+		var newTabs: [UITab] = []
+
+		for i in 0..<config.standardItemCount {
+			let tab = UITab(
+				title: label(at: i, in: config),
+				image: resolveSymbol(symbol(at: i, in: config)),
+				identifier: tabIdentifier(at: i)
+			) { _ in
+				let viewController = UIViewController()
+				viewController.view.backgroundColor = .clear
+				return viewController
+			}
+			tab.userInfo = i
+			newTabs.append(tab)
+		}
+
+		if config.hasActionButton {
+			let actionTab = UITab(
+				title: "",
+				image: resolveSymbol(config.actionButtonSymbol),
+				identifier: Self.actionTabIdentifier
+			) { _ in
+				let viewController = UIViewController()
+				viewController.view.backgroundColor = .clear
+				return viewController
+			}
+			actionTab.preferredPlacement = .pinned
+			newTabs.append(actionTab)
+		}
+
+		setTabs(newTabs, animated: false)
+		prominentTabIdentifier = config.hasActionButton ? Self.actionTabIdentifier : nil
+		updateSelectionAndColors()
+	}
+
 	private func updateSelectionAndColors() {
 		let needsAppearanceUpdate =
-			tabBar.tintColor != config.tintColor
+			currentTintColorARGB != config.tintColorARGB
 			|| currentAppearanceIsDark != config.isDark
 
 		if needsAppearanceUpdate {
 			tabBar.tintColor = config.tintColor
+			currentTintColorARGB = config.tintColorARGB
 			currentAppearanceIsDark = config.isDark
 			overrideUserInterfaceStyle = config.isDark ? .dark : .light
 			configureAppearance()
 		}
 
+		if #available(iOS 27.0, *) {
+			guard config.selectedIndex >= 0,
+				config.selectedIndex < config.standardItemCount,
+				let requestedTab = tab(forIdentifier: tabIdentifier(at: config.selectedIndex))
+			else { return }
+
+			if selectedTab?.identifier != requestedTab.identifier {
+				selectedTab = requestedTab
+			}
+			return
+		}
+
 		if self.selectedIndex != config.selectedIndex {
 			if let vcs = self.viewControllers,
+				config.selectedIndex >= 0,
 				config.selectedIndex < vcs.count,
 				vcs[config.selectedIndex].tabBarItem.tag != 99
 			{
@@ -268,5 +400,28 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 			config.selectedIndex = tag
 			channel.invokeMethod("valueChanged", arguments: ["index": tag])
 		}
+	}
+
+	@available(iOS 18.0, *)
+	func tabBarController(
+		_ tabBarController: UITabBarController,
+		shouldSelectTab tab: UITab
+	) -> Bool {
+		if tab.identifier == Self.actionTabIdentifier {
+			channel.invokeMethod("actionButtonPressed", arguments: nil)
+			return false
+		}
+		return true
+	}
+
+	@available(iOS 18.0, *)
+	func tabBarController(
+		_ tabBarController: UITabBarController,
+		didSelectTab selectedTab: UITab,
+		previousTab: UITab?
+	) {
+		guard let index = selectedTab.userInfo as? Int else { return }
+		config.selectedIndex = index
+		channel.invokeMethod("valueChanged", arguments: ["index": index])
 	}
 }

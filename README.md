@@ -24,8 +24,13 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-    native_glass_navbar: ^1.0.2
+    native_glass_navbar: ^1.1.0
 ```
+
+## Requirements
+
+- Build iOS apps with Xcode 27 or later.
+- The example uses Flutter 3.47.4, pinned with FVM, and Swift Package Manager.
 
 ## Usage
 

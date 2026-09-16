@@ -11,11 +11,15 @@ let package = Package(
     products: [
         .library(name: "native-glass-navbar", targets: ["native_glass_navbar"])
     ],
-    dependencies: [],
+    dependencies: [
+        .package(name: "FlutterFramework", path: "../FlutterFramework")
+    ],
     targets: [
         .target(
             name: "native_glass_navbar",
-            dependencies: [],
+            dependencies: [
+                .product(name: "FlutterFramework", package: "FlutterFramework")
+            ],
             resources: [
                 .process("PrivacyInfo.xcprivacy")
             ]

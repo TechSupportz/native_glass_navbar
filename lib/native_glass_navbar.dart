@@ -87,11 +87,21 @@ class NativeGlassNavBar extends StatefulWidget {
 class _NativeGlassNavBarState extends State<NativeGlassNavBar> {
   MethodChannel? _channel;
   late Future<bool> _supportLiquidGlassFuture;
+  _NativeGlassNavBarParams? _lastSentParams;
 
   void _updateNativeView() {
-    if (_channel != null) {
-      _channel!.invokeMethod('update', _createParams());
+    final channel = _channel;
+    if (channel == null) {
+      return;
     }
+
+    final params = _createParams();
+    if (params == _lastSentParams) {
+      return;
+    }
+
+    _lastSentParams = params;
+    channel.invokeMethod('update', params.toMap());
   }
 
   Future<bool> checkLiquidGlassSupport() async {
@@ -102,17 +112,17 @@ class _NativeGlassNavBarState extends State<NativeGlassNavBar> {
     return await LiquidGlassHelper.isLiquidGlassSupported();
   }
 
-  Map<String, dynamic> _createParams() {
-    return {
-      'labels': widget.tabs.map((e) => e.label).toList(),
-      'symbols': widget.tabs.map((e) => e.symbol).toList(),
-      'actionButtonSymbol': widget.actionButton?.symbol,
-      'selectedIndex': widget.currentIndex,
-      'isDark': Theme.of(context).brightness == Brightness.dark,
-      'tintColor': widget.tintColor != null
+  _NativeGlassNavBarParams _createParams() {
+    return _NativeGlassNavBarParams(
+      labels: widget.tabs.map((e) => e.label).toList(growable: false),
+      symbols: widget.tabs.map((e) => e.symbol).toList(growable: false),
+      actionButtonSymbol: widget.actionButton?.symbol ?? '',
+      selectedIndex: widget.currentIndex,
+      isDark: Theme.of(context).brightness == Brightness.dark,
+      tintColor: widget.tintColor != null
           ? widget.tintColor!.toARGB32()
           : Theme.of(context).colorScheme.primary.toARGB32(),
-    };
+    );
   }
 
   @override
@@ -125,6 +135,18 @@ class _NativeGlassNavBarState extends State<NativeGlassNavBar> {
   void didUpdateWidget(NativeGlassNavBar oldWidget) {
     super.didUpdateWidget(oldWidget);
     _updateNativeView();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _updateNativeView();
+  }
+
+  @override
+  void dispose() {
+    _channel?.setMethodCallHandler(null);
+    super.dispose();
   }
 
   @override
@@ -155,18 +177,22 @@ class _NativeGlassNavBarState extends State<NativeGlassNavBar> {
         final bottomPadding = MediaQuery.of(context).padding.bottom;
         // Standard tab bar height is 49. Add bottom padding for safe area.
         final height = 49.0 + bottomPadding;
+        final params = _createParams();
 
         return SizedBox(
           height: height,
           child: UiKitView(
             viewType: 'NativeTabBar',
-            creationParams: _createParams(),
+            creationParams: params.toMap(),
             creationParamsCodec: const StandardMessageCodec(),
             onPlatformViewCreated: (id) {
               _channel = MethodChannel('NativeTabBar_$id');
+              _lastSentParams = params;
               _channel!.setMethodCallHandler((call) async {
                 if (call.method == 'valueChanged') {
                   final index = call.arguments['index'] as int;
+                  _lastSentParams = (_lastSentParams ?? _createParams())
+                      .copyWith(selectedIndex: index);
                   widget.onTap(index);
                 }
 
@@ -180,4 +206,82 @@ class _NativeGlassNavBarState extends State<NativeGlassNavBar> {
       },
     );
   }
+}
+
+class _NativeGlassNavBarParams {
+  const _NativeGlassNavBarParams({
+    required this.labels,
+    required this.symbols,
+    required this.actionButtonSymbol,
+    required this.selectedIndex,
+    required this.isDark,
+    required this.tintColor,
+  });
+
+  final List<String> labels;
+  final List<String> symbols;
+  final String actionButtonSymbol;
+  final int selectedIndex;
+  final bool isDark;
+  final int tintColor;
+
+  Map<String, dynamic> toMap() {
+    return {
+      'labels': labels,
+      'symbols': symbols,
+      'actionButtonSymbol': actionButtonSymbol,
+      'selectedIndex': selectedIndex,
+      'isDark': isDark,
+      'tintColor': tintColor,
+    };
+  }
+
+  _NativeGlassNavBarParams copyWith({int? selectedIndex}) {
+    return _NativeGlassNavBarParams(
+      labels: labels,
+      symbols: symbols,
+      actionButtonSymbol: actionButtonSymbol,
+      selectedIndex: selectedIndex ?? this.selectedIndex,
+      isDark: isDark,
+      tintColor: tintColor,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is _NativeGlassNavBarParams &&
+            _stringListsEqual(labels, other.labels) &&
+            _stringListsEqual(symbols, other.symbols) &&
+            actionButtonSymbol == other.actionButtonSymbol &&
+            selectedIndex == other.selectedIndex &&
+            isDark == other.isDark &&
+            tintColor == other.tintColor;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      Object.hashAll(labels),
+      Object.hashAll(symbols),
+      actionButtonSymbol,
+      selectedIndex,
+      isDark,
+      tintColor,
+    );
+  }
+}
+
+bool _stringListsEqual(List<String> a, List<String> b) {
+  if (a.length != b.length) {
+    return false;
+  }
+
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) {
+      return false;
+    }
+  }
+
+  return true;
 }
