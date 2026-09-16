@@ -42,9 +42,20 @@ class NativeTabBarPlatformView: NSObject, FlutterPlatformView {
 	}
 }
 
+struct NativeTabConfig: Equatable {
+	let label: String
+	let symbol: String
+	let selectedSymbol: String
+
+	init(from dict: [String: Any]) {
+		self.label = dict["label"] as? String ?? ""
+		self.symbol = dict["symbol"] as? String ?? "questionmark"
+		self.selectedSymbol = dict["selectedSymbol"] as? String ?? self.symbol
+	}
+}
+
 struct TabBarConfig: Equatable {
-	var labels: [String] = []
-	var symbols: [String] = []
+	var tabs: [NativeTabConfig] = []
 	var actionButtonSymbol: String = ""  // Default to empty
 	var tintColor: UIColor = .systemBlue
 	var tintColorARGB: Int = 0xFF007AFF
@@ -52,7 +63,7 @@ struct TabBarConfig: Equatable {
 	var isDark: Bool = false
 
 	var standardItemCount: Int {
-		return max(labels.count, symbols.count)
+		return tabs.count
 	}
 
 	var hasActionButton: Bool {
@@ -61,8 +72,9 @@ struct TabBarConfig: Equatable {
 
 	init(from dict: [String: Any]?) {
 		guard let dict = dict else { return }
-		if let l = dict["labels"] as? [String] { self.labels = l }
-		if let s = dict["symbols"] as? [String] { self.symbols = s }
+		if let tabs = dict["tabs"] as? [[String: Any]] {
+			self.tabs = tabs.map(NativeTabConfig.init)
+		}
 
 		if let action = dict["actionButtonSymbol"] as? String {
 			self.actionButtonSymbol = action
@@ -86,8 +98,7 @@ struct TabBarConfig: Equatable {
 	}
 
 	static func == (lhs: TabBarConfig, rhs: TabBarConfig) -> Bool {
-		return lhs.labels == rhs.labels
-			&& lhs.symbols == rhs.symbols
+		return lhs.tabs == rhs.tabs
 			&& lhs.actionButtonSymbol == rhs.actionButtonSymbol
 			&& lhs.tintColorARGB == rhs.tintColorARGB
 			&& lhs.selectedIndex == rhs.selectedIndex
@@ -210,6 +221,7 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 			guard i < vcs.count, let item = vcs[i].tabBarItem else { continue }
 			let newLabel = label(at: i, in: config)
 			let newSymbol = symbol(at: i, in: config)
+			let newSelectedSymbol = config.tabs[i].selectedSymbol
 
 			if newLabel != label(at: i, in: oldConfig) {
 				item.title = newLabel
@@ -217,6 +229,10 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 
 			if newSymbol != symbol(at: i, in: oldConfig) {
 				item.image = resolveSymbol(newSymbol)
+			}
+
+			if newSelectedSymbol != oldConfig.tabs[i].selectedSymbol {
+				item.selectedImage = resolveSymbol(newSelectedSymbol)
 			}
 		}
 
@@ -242,6 +258,10 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 				if newSymbol != symbol(at: i, in: oldConfig) {
 					tab.image = resolveSymbol(newSymbol)
 				}
+
+				if config.tabs[i].selectedSymbol != oldConfig.tabs[i].selectedSymbol {
+					tab.selectedImage = resolveSymbol(config.tabs[i].selectedSymbol)
+				}
 			}
 
 			if oldConfig.actionButtonSymbol != config.actionButtonSymbol,
@@ -253,11 +273,11 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 	}
 
 	private func label(at index: Int, in config: TabBarConfig) -> String {
-		return index < config.labels.count ? config.labels[index] : ""
+		return config.tabs[index].label
 	}
 
 	private func symbol(at index: Int, in config: TabBarConfig) -> String {
-		return index < config.symbols.count ? config.symbols[index] : "questionmark"
+		return config.tabs[index].symbol
 	}
 
 	private func tabIdentifier(at index: Int) -> String {
@@ -278,11 +298,13 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 			let dummyVC = UIViewController()
 			dummyVC.view.backgroundColor = .clear
 
-			dummyVC.tabBarItem = UITabBarItem(
+			let item = UITabBarItem(
 				title: label(at: i, in: config),
 				image: resolveSymbol(symbol(at: i, in: config)),
-				tag: i
+				selectedImage: resolveSymbol(config.tabs[i].selectedSymbol)
 			)
+			item.tag = i
+			dummyVC.tabBarItem = item
 			controllers.append(dummyVC)
 		}
 
@@ -316,6 +338,7 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 				viewController.view.backgroundColor = .clear
 				return viewController
 			}
+			tab.selectedImage = resolveSymbol(config.tabs[i].selectedSymbol)
 			tab.userInfo = i
 			newTabs.append(tab)
 		}

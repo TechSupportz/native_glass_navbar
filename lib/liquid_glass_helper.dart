@@ -21,6 +21,8 @@ class LiquidGlassHelper {
         'isLiquidGlassSupported',
       );
       return supported;
+    } on MissingPluginException {
+      return false;
     } on PlatformException {
       return false;
     }

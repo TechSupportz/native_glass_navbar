@@ -5,9 +5,11 @@ export 'liquid_glass_helper.dart';
 
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:native_glass_navbar/liquid_glass_helper.dart';
+import 'package:native_glass_navbar/src/native_tab_config.dart';
 
 /// Represents a tab item in the [NativeGlassNavBar].
 class NativeGlassNavBarItem {
@@ -17,8 +19,15 @@ class NativeGlassNavBarItem {
   /// The SF Symbol name to use for the tab icon.
   final String symbol;
 
+  /// The SF Symbol to use while this tab is selected.
+  final String? selectedSymbol;
+
   /// Creates a new [NativeGlassNavBarItem].
-  const NativeGlassNavBarItem({required this.label, required this.symbol});
+  const NativeGlassNavBarItem({
+    required this.label,
+    required this.symbol,
+    this.selectedSymbol,
+  });
 }
 
 /// Represents an action button in the [NativeGlassNavBar].
@@ -114,8 +123,13 @@ class _NativeGlassNavBarState extends State<NativeGlassNavBar> {
 
   _NativeGlassNavBarParams _createParams() {
     return _NativeGlassNavBarParams(
-      labels: widget.tabs.map((e) => e.label).toList(growable: false),
-      symbols: widget.tabs.map((e) => e.symbol).toList(growable: false),
+      tabs: widget.tabs
+          .map((e) => NativeTabConfig(
+                label: e.label,
+                symbol: e.symbol,
+                selectedSymbol: e.selectedSymbol,
+              ))
+          .toList(growable: false),
       actionButtonSymbol: widget.actionButton?.symbol ?? '',
       selectedIndex: widget.currentIndex,
       isDark: Theme.of(context).brightness == Brightness.dark,
@@ -146,6 +160,7 @@ class _NativeGlassNavBarState extends State<NativeGlassNavBar> {
   @override
   void dispose() {
     _channel?.setMethodCallHandler(null);
+    _channel = null;
     super.dispose();
   }
 
@@ -155,7 +170,7 @@ class _NativeGlassNavBarState extends State<NativeGlassNavBar> {
       future: _supportLiquidGlassFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SizedBox.shrink();
+          return widget.fallback ?? const SizedBox.shrink();
         }
 
         if (snapshot.data != true) {
@@ -185,6 +200,9 @@ class _NativeGlassNavBarState extends State<NativeGlassNavBar> {
             viewType: 'NativeTabBar',
             creationParams: params.toMap(),
             creationParamsCodec: const StandardMessageCodec(),
+            gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+              Factory<EagerGestureRecognizer>(EagerGestureRecognizer.new),
+            },
             onPlatformViewCreated: (id) {
               _channel = MethodChannel('NativeTabBar_$id');
               _lastSentParams = params;
@@ -210,36 +228,32 @@ class _NativeGlassNavBarState extends State<NativeGlassNavBar> {
 
 class _NativeGlassNavBarParams {
   const _NativeGlassNavBarParams({
-    required this.labels,
-    required this.symbols,
+    required this.tabs,
     required this.actionButtonSymbol,
     required this.selectedIndex,
     required this.isDark,
     required this.tintColor,
   });
 
-  final List<String> labels;
-  final List<String> symbols;
+  final List<NativeTabConfig> tabs;
   final String actionButtonSymbol;
   final int selectedIndex;
   final bool isDark;
   final int tintColor;
 
   Map<String, dynamic> toMap() {
-    return {
-      'labels': labels,
-      'symbols': symbols,
-      'actionButtonSymbol': actionButtonSymbol,
-      'selectedIndex': selectedIndex,
-      'isDark': isDark,
-      'tintColor': tintColor,
-    };
+    return createNativeTabBarParams(
+      tabs: tabs,
+      actionButtonSymbol: actionButtonSymbol,
+      selectedIndex: selectedIndex,
+      isDark: isDark,
+      tintColor: tintColor,
+    );
   }
 
   _NativeGlassNavBarParams copyWith({int? selectedIndex}) {
     return _NativeGlassNavBarParams(
-      labels: labels,
-      symbols: symbols,
+      tabs: tabs,
       actionButtonSymbol: actionButtonSymbol,
       selectedIndex: selectedIndex ?? this.selectedIndex,
       isDark: isDark,
@@ -251,8 +265,7 @@ class _NativeGlassNavBarParams {
   bool operator ==(Object other) {
     return identical(this, other) ||
         other is _NativeGlassNavBarParams &&
-            _stringListsEqual(labels, other.labels) &&
-            _stringListsEqual(symbols, other.symbols) &&
+            _tabListsEqual(tabs, other.tabs) &&
             actionButtonSymbol == other.actionButtonSymbol &&
             selectedIndex == other.selectedIndex &&
             isDark == other.isDark &&
@@ -262,8 +275,11 @@ class _NativeGlassNavBarParams {
   @override
   int get hashCode {
     return Object.hash(
-      Object.hashAll(labels),
-      Object.hashAll(symbols),
+      Object.hashAll(tabs.map((tab) => Object.hash(
+        tab.label,
+        tab.symbol,
+        tab.selectedSymbol,
+      ))),
       actionButtonSymbol,
       selectedIndex,
       isDark,
@@ -272,13 +288,15 @@ class _NativeGlassNavBarParams {
   }
 }
 
-bool _stringListsEqual(List<String> a, List<String> b) {
+bool _tabListsEqual(List<NativeTabConfig> a, List<NativeTabConfig> b) {
   if (a.length != b.length) {
     return false;
   }
 
   for (var i = 0; i < a.length; i++) {
-    if (a[i] != b[i]) {
+    if (a[i].label != b[i].label ||
+        a[i].symbol != b[i].symbol ||
+        a[i].selectedSymbol != b[i].selectedSymbol) {
       return false;
     }
   }
