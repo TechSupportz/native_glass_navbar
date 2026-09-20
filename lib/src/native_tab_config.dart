@@ -5,6 +5,7 @@ class NativeTabConfig {
     required this.label,
     required this.symbol,
     String? selectedSymbol,
+    this.badgeValue,
   }) : selectedSymbol = selectedSymbol ?? symbol;
 
   /// The tab's visible label.
@@ -16,9 +17,17 @@ class NativeTabConfig {
   /// The icon used while the tab is selected.
   final String selectedSymbol;
 
+  /// The native badge text, or null to hide the badge.
+  final String? badgeValue;
+
   /// Serializes this tab without splitting its fields into parallel arrays.
-  Map<String, String> toMap() {
-    return {'label': label, 'symbol': symbol, 'selectedSymbol': selectedSymbol};
+  Map<String, String?> toMap() {
+    return {
+      'label': label,
+      'symbol': symbol,
+      'selectedSymbol': selectedSymbol,
+      'badgeValue': badgeValue,
+    };
   }
 }
 

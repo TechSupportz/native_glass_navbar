@@ -15,6 +15,7 @@ Oh yeah, it also doesn't have any 3rd party dependencies!
 - **Native look and feel**: Probably because it is native 😉.
 - **Dark Mode & Theming**: Automatically matches system themes and uses your app's primary color.
 - **Action Button**: Add a floating action button for your main app actions.
+- **Tab Badges**: Show and update native badges on individual tabs.
 - **SF Symbols**: Use any [SF Symbol](https://developer.apple.com/sf-symbols/) for icons.
 - **Fallback Support**: Optionally define a fallback widget for Android or older iOS versions.
 
@@ -85,6 +86,18 @@ NativeGlassNavBar(
 )
 ```
 
+### With Tab Badges
+
+Set `badgeValue` on a tab item. Rebuild the bar with a new value to update the badge; use `null` to hide it.
+
+```dart
+NativeGlassNavBarItem(
+  label: 'Inbox',
+  symbol: 'tray.fill',
+  badgeValue: unreadCount == 0 ? null : '$unreadCount',
+)
+```
+
 ### Handling Unsupported Platforms
 
 Since this plugin relies on native iOS APIs, it will not render the glass effect on Android or older iOS versions. You can provide a `fallback` widget (like a standard `BottomNavigationBar`) for these cases.
@@ -123,3 +136,4 @@ NativeGlassNavBar(
 | `label`          | `String`  | Text label for the tab.                                                                              |
 | `symbol`         | `String`  | [SF Symbol](https://developer.apple.com/sf-symbols/) name for the normal icon (e.g., 'house').       |
 | `selectedSymbol` | `String?` | Optional SF Symbol for the selected icon (e.g., 'house.fill'). Defaults to `symbol`.                 |
+| `badgeValue`     | `String?` | Native badge text. `null` hides the badge.                                                          |

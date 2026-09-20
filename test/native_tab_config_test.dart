@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:native_glass_navbar/src/native_tab_config.dart';
 
@@ -9,6 +10,7 @@ void main() {
       'label': 'Home',
       'symbol': 'house',
       'selectedSymbol': 'house',
+      'badgeValue': null,
     });
   });
 
@@ -19,6 +21,7 @@ void main() {
           label: 'Home',
           symbol: 'house',
           selectedSymbol: 'house.fill',
+          badgeValue: '3',
         ),
         NativeTabConfig(label: 'Search', symbol: 'magnifyingglass'),
       ],
@@ -30,11 +33,17 @@ void main() {
 
     expect(params, {
       'tabs': [
-        {'label': 'Home', 'symbol': 'house', 'selectedSymbol': 'house.fill'},
+        {
+          'label': 'Home',
+          'symbol': 'house',
+          'selectedSymbol': 'house.fill',
+          'badgeValue': '3',
+        },
         {
           'label': 'Search',
           'symbol': 'magnifyingglass',
           'selectedSymbol': 'magnifyingglass',
+          'badgeValue': null,
         },
       ],
       'actionButtonSymbol': null,
@@ -44,5 +53,7 @@ void main() {
     });
     expect(params, isNot(contains('labels')));
     expect(params, isNot(contains('symbols')));
+    final encoded = const StandardMessageCodec().encodeMessage(params);
+    expect(const StandardMessageCodec().decodeMessage(encoded), params);
   });
 }

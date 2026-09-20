@@ -4,6 +4,7 @@ library native_glass_navbar;
 export 'liquid_glass_helper.dart';
 
 import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -22,11 +23,15 @@ class NativeGlassNavBarItem {
   /// The SF Symbol to use while this tab is selected.
   final String? selectedSymbol;
 
+  /// Text shown in the tab's native badge. Null hides the badge.
+  final String? badgeValue;
+
   /// Creates a new [NativeGlassNavBarItem].
   const NativeGlassNavBarItem({
     required this.label,
     required this.symbol,
     this.selectedSymbol,
+    this.badgeValue,
   });
 }
 
@@ -124,11 +129,14 @@ class _NativeGlassNavBarState extends State<NativeGlassNavBar> {
   _NativeGlassNavBarParams _createParams() {
     return _NativeGlassNavBarParams(
       tabs: widget.tabs
-          .map((e) => NativeTabConfig(
-                label: e.label,
-                symbol: e.symbol,
-                selectedSymbol: e.selectedSymbol,
-              ))
+          .map(
+            (e) => NativeTabConfig(
+              label: e.label,
+              symbol: e.symbol,
+              selectedSymbol: e.selectedSymbol,
+              badgeValue: e.badgeValue,
+            ),
+          )
           .toList(growable: false),
       actionButtonSymbol: widget.actionButton?.symbol ?? '',
       selectedIndex: widget.currentIndex,
@@ -275,11 +283,16 @@ class _NativeGlassNavBarParams {
   @override
   int get hashCode {
     return Object.hash(
-      Object.hashAll(tabs.map((tab) => Object.hash(
-        tab.label,
-        tab.symbol,
-        tab.selectedSymbol,
-      ))),
+      Object.hashAll(
+        tabs.map(
+          (tab) => Object.hash(
+            tab.label,
+            tab.symbol,
+            tab.selectedSymbol,
+            tab.badgeValue,
+          ),
+        ),
+      ),
       actionButtonSymbol,
       selectedIndex,
       isDark,
@@ -296,7 +309,8 @@ bool _tabListsEqual(List<NativeTabConfig> a, List<NativeTabConfig> b) {
   for (var i = 0; i < a.length; i++) {
     if (a[i].label != b[i].label ||
         a[i].symbol != b[i].symbol ||
-        a[i].selectedSymbol != b[i].selectedSymbol) {
+        a[i].selectedSymbol != b[i].selectedSymbol ||
+        a[i].badgeValue != b[i].badgeValue) {
       return false;
     }
   }

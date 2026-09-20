@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'action_button_counter.dart';
+import 'badge_tabs.dart';
 import 'basic_two_tabs.dart';
 import 'custom_color_tabs.dart';
 import 'custom_icon_tabs.dart';
@@ -96,6 +97,12 @@ class HomePage extends StatelessWidget {
         description: '3 tabs with a central action button',
         icon: Icons.add_circle_rounded,
         page: const ActionButtonCounterApp(),
+      ),
+      _ExampleItem(
+        title: 'Tab Badges',
+        description: 'Update and clear native badges on individual tabs',
+        icon: Icons.mark_email_unread_rounded,
+        page: const BadgeTabsApp(),
       ),
       _ExampleItem(
         title: 'Custom Color',

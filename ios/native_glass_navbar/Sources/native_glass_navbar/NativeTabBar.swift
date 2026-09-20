@@ -46,11 +46,13 @@ struct NativeTabConfig: Equatable {
 	let label: String
 	let symbol: String
 	let selectedSymbol: String
+	let badgeValue: String?
 
 	init(from dict: [String: Any]) {
 		self.label = dict["label"] as? String ?? ""
 		self.symbol = dict["symbol"] as? String ?? "questionmark"
 		self.selectedSymbol = dict["selectedSymbol"] as? String ?? self.symbol
+		self.badgeValue = dict["badgeValue"] as? String
 	}
 }
 
@@ -234,6 +236,10 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 			if newSelectedSymbol != oldConfig.tabs[i].selectedSymbol {
 				item.selectedImage = resolveSymbol(newSelectedSymbol)
 			}
+
+			if config.tabs[i].badgeValue != oldConfig.tabs[i].badgeValue {
+				item.badgeValue = config.tabs[i].badgeValue
+			}
 		}
 
 		if oldConfig.actionButtonSymbol != config.actionButtonSymbol,
@@ -261,6 +267,10 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 
 				if config.tabs[i].selectedSymbol != oldConfig.tabs[i].selectedSymbol {
 					tab.selectedImage = resolveSymbol(config.tabs[i].selectedSymbol)
+				}
+
+				if config.tabs[i].badgeValue != oldConfig.tabs[i].badgeValue {
+					tab.badgeValue = config.tabs[i].badgeValue
 				}
 			}
 
@@ -304,6 +314,7 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 				selectedImage: resolveSymbol(config.tabs[i].selectedSymbol)
 			)
 			item.tag = i
+			item.badgeValue = config.tabs[i].badgeValue
 			dummyVC.tabBarItem = item
 			controllers.append(dummyVC)
 		}
@@ -339,6 +350,7 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 				return viewController
 			}
 			tab.selectedImage = resolveSymbol(config.tabs[i].selectedSymbol)
+			tab.badgeValue = config.tabs[i].badgeValue
 			tab.userInfo = i
 			newTabs.append(tab)
 		}
