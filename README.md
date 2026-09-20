@@ -25,7 +25,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-    native_glass_navbar: ^1.1.0
+    native_glass_navbar: ^1.2.0
 ```
 
 ## Requirements

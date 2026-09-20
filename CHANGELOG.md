@@ -1,3 +1,9 @@
+## 1.2.0
+
+- Added native tab badges through `NativeGlassNavBarItem.badgeValue`, including in-place updates and an interactive example.
+- Added optional selected-state SF Symbols for tab items.
+- Preserved native tab taps and selection while updating tab configuration in place.
+
 ## 1.1.0
 
 - Restored the separate trailing action button on iOS 27 using `UITab` and `prominentTabIdentifier`, removing the incorrect Search label.
