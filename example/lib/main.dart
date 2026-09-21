@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'action_button_counter.dart';
 import 'badge_tabs.dart';
 import 'basic_two_tabs.dart';
@@ -19,7 +20,9 @@ class MyApp extends StatelessWidget {
     final lightTheme = ThemeData(
       brightness: Brightness.light,
       useMaterial3: true,
-      snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
+      snackBarTheme: const SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+      ),
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -27,10 +30,19 @@ class MyApp extends StatelessWidget {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(width: 1.5, color: Colors.grey.withValues(alpha: 0.25)),
+          borderSide: BorderSide(
+            width: 1.5,
+            color: Colors.grey.withValues(alpha: 0.25),
+          ),
         ),
-        floatingLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        floatingLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 18,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         filled: true,
       ),
       dialogTheme: DialogThemeData(
@@ -46,7 +58,9 @@ class MyApp extends StatelessWidget {
       brightness: Brightness.dark,
       useMaterial3: true,
       colorSchemeSeed: Colors.blue,
-      snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
+      snackBarTheme: const SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+      ),
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -54,10 +68,19 @@ class MyApp extends StatelessWidget {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(width: 1.5, color: Colors.grey.withValues(alpha: 0.25)),
+          borderSide: BorderSide(
+            width: 1.5,
+            color: Colors.grey.withValues(alpha: 0.25),
+          ),
         ),
-        floatingLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        floatingLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 18,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         filled: true,
       ),
       dialogTheme: const DialogThemeData(
@@ -136,17 +159,29 @@ class HomePage extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             child: ListTile(
               contentPadding: const EdgeInsets.all(16),
-              leading: Icon(example.icon, size: 40, color: Theme.of(context).colorScheme.primary),
+              leading: Icon(
+                example.icon,
+                size: 40,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               title: Text(
                 example.title,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 4.0),
-                child: Text(example.description, style: const TextStyle(fontSize: 14)),
+                child: Text(
+                  example.description,
+                  style: const TextStyle(fontSize: 14),
+                ),
               ),
               onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (context) => example.page));
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (context) => example.page));
               },
               trailing: const Icon(Icons.chevron_right),
             ),

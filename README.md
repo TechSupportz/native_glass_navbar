@@ -4,7 +4,8 @@ A Flutter plugin that brings the native iOS Liquid Glass style navigation bar to
 
 This package uses [platform views and method channels](https://docs.flutter.dev/platform-integration/ios/platform-views) to render the actual native iOS `UITabBar`. This means no more of that uncanny valley effect that you often get with custom Flutter implementations.
 
-Oh yeah, it also doesn't have any 3rd party dependencies!
+The Dart implementation uses Flutter's official standalone `material_ui`
+package so Material and Cupertino apps share the same decoupled theme state.
 
 ## **Demos** <br />
 ![output](https://github.com/user-attachments/assets/d7691c1b-5eef-451d-b18f-4d118ca3e8f2)
@@ -25,12 +26,13 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-    native_glass_navbar: ^1.2.0
+    native_glass_navbar: ^2.0.0
 ```
 
 ## Requirements
 
 - Build iOS apps with Xcode 27 or later.
+- Use Flutter 3.44 or later and Dart 3.12 or later.
 - The example uses Flutter 3.47.4, pinned with FVM, and Swift Package Manager.
 
 ## Usage
@@ -97,6 +99,17 @@ NativeGlassNavBarItem(
   badgeValue: unreadCount == 0 ? null : '$unreadCount',
 )
 ```
+
+### Theme Integration
+
+Version 2 uses Flutter's standalone `material_ui` theme lookup. It automatically
+follows both `material_ui` `MaterialApp` themes and `cupertino_ui` `CupertinoApp`
+themes, including live light/dark changes. No compatibility bridge or explicit
+brightness parameter is required.
+
+Apps that still use Flutter's legacy `package:flutter/material.dart` or
+`package:flutter/cupertino.dart` should remain on `native_glass_navbar` 1.x
+until they migrate to the standalone UI packages.
 
 ### Handling Unsupported Platforms
 
