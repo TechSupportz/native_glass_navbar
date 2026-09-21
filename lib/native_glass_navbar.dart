@@ -7,8 +7,8 @@ import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:native_glass_navbar/liquid_glass_helper.dart';
 import 'package:native_glass_navbar/src/native_tab_config.dart';
 

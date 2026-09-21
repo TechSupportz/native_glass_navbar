@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:native_glass_navbar/native_glass_navbar.dart';
 import 'package:native_glass_navbar_example/badge_tabs.dart';
