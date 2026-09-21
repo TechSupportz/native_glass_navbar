@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:native_glass_navbar/native_glass_navbar.dart';
 
 void main() {
@@ -36,7 +36,10 @@ class _ActionButtonCounterAppState extends State<ActionButtonCounterApp> {
             children: [
               Text(
                 'Selected Index: $_currentIndex',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 32),
               Text(
@@ -44,7 +47,10 @@ class _ActionButtonCounterAppState extends State<ActionButtonCounterApp> {
                 style: const TextStyle(fontSize: 32, color: Colors.deepPurple),
               ),
               const SizedBox(height: 8),
-              const Text('Tap the + button to increment', style: TextStyle(color: Colors.grey)),
+              const Text(
+                'Tap the + button to increment',
+                style: TextStyle(color: Colors.grey),
+              ),
             ],
           ),
         ),

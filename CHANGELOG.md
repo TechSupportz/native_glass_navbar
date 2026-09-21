@@ -1,3 +1,13 @@
+## 2.0.0
+
+- **Breaking:** Migrated the Dart implementation to Flutter's standalone
+  `material_ui` package so decoupled Material and Cupertino apps share theme
+  brightness and primary-color updates automatically.
+- Raised the minimum supported versions to Flutter 3.44 and Dart 3.12.
+- Migrated the bundled example app to `material_ui`.
+- Apps using Flutter's legacy in-framework Material or Cupertino libraries
+  should remain on 1.x until they migrate to the standalone UI packages.
+
 ## 1.2.0
 
 - Added native tab badges through `NativeGlassNavBarItem.badgeValue`, including in-place updates and an interactive example.

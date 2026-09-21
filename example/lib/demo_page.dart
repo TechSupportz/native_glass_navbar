@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:native_glass_navbar/native_glass_navbar.dart';
 
 class DemoPage extends StatefulWidget {
@@ -40,9 +40,9 @@ class _DemoPageState extends State<DemoPage> {
 
   void _addTab() {
     if (_tabs.length >= (_isActionButtonEnabled ? 4 : 5)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Maximum number of tabs reached')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Maximum number of tabs reached')),
+      );
       return;
     }
     setState(() {
@@ -92,7 +92,10 @@ class _DemoPageState extends State<DemoPage> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () {
               setState(() {
@@ -129,7 +132,11 @@ class _DemoPageState extends State<DemoPage> {
             ),
             child: Text(
               'Selected Index: $_currentIndex',
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 0.1),
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.1,
+              ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -137,7 +144,10 @@ class _DemoPageState extends State<DemoPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Tabs', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
+              const Text(
+                'Tabs',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+              ),
               IconButton(icon: const Icon(Icons.add), onPressed: _addTab),
             ],
           ),
@@ -147,7 +157,10 @@ class _DemoPageState extends State<DemoPage> {
             return ListTile(
               title: Text(
                 tab.label,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               subtitle: Text(tab.symbol),
               trailing: Row(
@@ -162,8 +175,12 @@ class _DemoPageState extends State<DemoPage> {
                     icon: const Icon(Icons.delete_rounded),
                     onPressed: () => _removeTab(index),
                     style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty.all(colorScheme.errorContainer),
-                      foregroundColor: WidgetStateProperty.all(colorScheme.error),
+                      backgroundColor: WidgetStateProperty.all(
+                        colorScheme.errorContainer,
+                      ),
+                      foregroundColor: WidgetStateProperty.all(
+                        colorScheme.error,
+                      ),
                     ),
                   ),
                 ],
@@ -184,7 +201,11 @@ class _DemoPageState extends State<DemoPage> {
               onChanged: (value) {
                 if (value && _tabs.length > 4) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Remove a tab first (Max 4 with action button)')),
+                    const SnackBar(
+                      content: Text(
+                        'Remove a tab first (Max 4 with action button)',
+                      ),
+                    ),
                   );
                   return;
                 }
@@ -236,13 +257,16 @@ class _DemoPageState extends State<DemoPage> {
                     children: List.generate(4, (colIndex) {
                       final random = Random(rowIndex * 4 + colIndex);
                       final flex = random.nextInt(3) + 1;
-                      final color = Colors.primaries[random.nextInt(Colors.primaries.length)];
+                      final color = Colors
+                          .primaries[random.nextInt(Colors.primaries.length)];
 
                       return Expanded(
                         flex: flex,
                         child: Container(
                           height: 80,
-                          margin: EdgeInsets.only(right: colIndex == 3 ? 0 : 12.0),
+                          margin: EdgeInsets.only(
+                            right: colIndex == 3 ? 0 : 12.0,
+                          ),
                           decoration: BoxDecoration(
                             color: color,
                             borderRadius: BorderRadius.circular(16),
@@ -274,9 +298,9 @@ class _DemoPageState extends State<DemoPage> {
                 symbol: _actionButtonSymbol,
                 onTap: () {
                   debugPrint('Action button tapped');
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('Action button tapped')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Action button tapped')),
+                  );
                 },
               )
             : null,

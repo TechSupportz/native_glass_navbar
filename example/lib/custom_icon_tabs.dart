@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:native_glass_navbar/native_glass_navbar.dart';
 
 void main() {
@@ -37,7 +37,10 @@ class _CustomIconTabsAppState extends State<CustomIconTabsApp> {
             children: [
               Text(
                 'Selected Index: $_currentIndex',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -53,7 +56,10 @@ class _CustomIconTabsAppState extends State<CustomIconTabsApp> {
               Text(
                 'NOTE: Image assets need to be manually added to the project via Xcode',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -71,9 +77,9 @@ class _CustomIconTabsAppState extends State<CustomIconTabsApp> {
           symbol: 'material_add',
           onTap: () {
             debugPrint('Action button tapped');
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Action button tapped')));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Action button tapped')),
+            );
           },
         ),
       ),

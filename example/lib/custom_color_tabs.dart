@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:native_glass_navbar/native_glass_navbar.dart';
 
 void main() {
@@ -18,7 +18,10 @@ class _CustomColorTabsAppState extends State<CustomColorTabsApp> {
   @override
   Widget build(BuildContext context) {
     return Theme(
-      data: ThemeData(useMaterial3: true, brightness: Theme.of(context).brightness),
+      data: ThemeData(
+        useMaterial3: true,
+        brightness: Theme.of(context).brightness,
+      ),
       child: Scaffold(
         extendBody: true, // NOTE - Enable to allow elements to be drawn behind the tab bar
         appBar: AppBar(title: const Text('Custom Color Example')),
@@ -28,7 +31,10 @@ class _CustomColorTabsAppState extends State<CustomColorTabsApp> {
             children: [
               Text(
                 'Selected Index: $_currentIndex',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               const Text(
@@ -50,7 +56,10 @@ class _CustomColorTabsAppState extends State<CustomColorTabsApp> {
             NativeGlassNavBarItem(label: 'Favorites', symbol: 'star.fill'),
             NativeGlassNavBarItem(label: 'Recents', symbol: 'clock.fill'),
             NativeGlassNavBarItem(label: 'Contacts', symbol: 'person.2.fill'),
-            NativeGlassNavBarItem(label: 'Keypad', symbol: 'circle.grid.3x3.fill'),
+            NativeGlassNavBarItem(
+              label: 'Keypad',
+              symbol: 'circle.grid.3x3.fill',
+            ),
           ],
         ),
       ),
