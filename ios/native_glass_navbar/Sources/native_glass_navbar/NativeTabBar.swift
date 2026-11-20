@@ -212,7 +212,7 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 	}
 
 	private func updateTabItemsInPlace(from oldConfig: TabBarConfig) {
-		if #available(iOS 27.0, *) {
+		if #available(iOS 18.0, *) {
 			updateModernTabsInPlace(from: oldConfig)
 			return
 		}
@@ -249,37 +249,25 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 		}
 	}
 
-	@available(iOS 27.0, *)
+	@available(iOS 18.0, *)
 	private func updateModernTabsInPlace(from oldConfig: TabBarConfig) {
-		performBatchUpdates {
-			for i in 0..<config.standardItemCount {
-				guard let tab = tab(forIdentifier: tabIdentifier(at: i)) else { continue }
-				let newLabel = label(at: i, in: config)
-				let newSymbol = symbol(at: i, in: config)
-
-				if newLabel != label(at: i, in: oldConfig) {
-					tab.title = newLabel
-				}
-
-				if newSymbol != symbol(at: i, in: oldConfig) {
-					tab.image = resolveSymbol(newSymbol)
-				}
-
-				if config.tabs[i].selectedSymbol != oldConfig.tabs[i].selectedSymbol {
-					tab.selectedImage = resolveSymbol(config.tabs[i].selectedSymbol)
-				}
-
-				if config.tabs[i].badgeValue != oldConfig.tabs[i].badgeValue {
-					tab.badgeValue = config.tabs[i].badgeValue
-				}
+		for i in 0..<config.standardItemCount {
+			guard let tab = tab(forIdentifier: tabIdentifier(at: i)) else { continue }
+			if label(at: i, in: config) != label(at: i, in: oldConfig) {
+				tab.title = label(at: i, in: config)
 			}
-
-			if oldConfig.actionButtonSymbol != config.actionButtonSymbol,
-				let actionTab = tab(forIdentifier: Self.actionTabIdentifier)
-			{
-				actionTab.image = resolveSymbol(config.actionButtonSymbol)
+			if config.tabs[i].badgeValue != oldConfig.tabs[i].badgeValue {
+				tab.badgeValue = config.tabs[i].badgeValue
 			}
 		}
+
+		if oldConfig.actionButtonSymbol != config.actionButtonSymbol,
+			let actionTab = tab(forIdentifier: Self.actionTabIdentifier)
+		{
+			actionTab.image = resolveSymbol(config.actionButtonSymbol)
+		}
+
+		updateModernTabImages()
 	}
 
 	private func label(at index: Int, in config: TabBarConfig) -> String {
@@ -295,7 +283,7 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 	}
 
 	private func performFullRebuild() {
-		if #available(iOS 27.0, *) {
+		if #available(iOS 18.0, *) {
 			performModernFullRebuild()
 			return
 		}
@@ -335,7 +323,7 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 		updateSelectionAndColors()
 	}
 
-	@available(iOS 27.0, *)
+	@available(iOS 18.0, *)
 	private func performModernFullRebuild() {
 		var newTabs: [UITab] = []
 
@@ -349,7 +337,6 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 				viewController.view.backgroundColor = .clear
 				return viewController
 			}
-			tab.selectedImage = resolveSymbol(config.tabs[i].selectedSymbol)
 			tab.badgeValue = config.tabs[i].badgeValue
 			tab.userInfo = i
 			newTabs.append(tab)
@@ -370,8 +357,21 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 		}
 
 		setTabs(newTabs, animated: false)
-		prominentTabIdentifier = config.hasActionButton ? Self.actionTabIdentifier : nil
+		updateModernTabImages()
 		updateSelectionAndColors()
+	}
+
+	/// `UITab.selectedImage` is an iOS 27 beta API. On supported SDKs, update
+	/// the tab's single image whenever the selected tab changes instead.
+	@available(iOS 18.0, *)
+	private func updateModernTabImages() {
+		for i in 0..<config.standardItemCount {
+			guard let tab = tab(forIdentifier: tabIdentifier(at: i)) else { continue }
+			let symbol = i == config.selectedIndex
+				? config.tabs[i].selectedSymbol
+				: config.tabs[i].symbol
+			tab.image = resolveSymbol(symbol)
+		}
 	}
 
 	private func updateSelectionAndColors() {
@@ -387,12 +387,13 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 			configureAppearance()
 		}
 
-		if #available(iOS 27.0, *) {
+		if #available(iOS 18.0, *) {
 			guard config.selectedIndex >= 0,
 				config.selectedIndex < config.standardItemCount,
 				let requestedTab = tab(forIdentifier: tabIdentifier(at: config.selectedIndex))
 			else { return }
 
+			updateModernTabImages()
 			if selectedTab?.identifier != requestedTab.identifier {
 				selectedTab = requestedTab
 			}
@@ -457,6 +458,7 @@ class LiquidGlassTabBarController: UITabBarController, UITabBarControllerDelegat
 	) {
 		guard let index = selectedTab.userInfo as? Int else { return }
 		config.selectedIndex = index
+		updateModernTabImages()
 		channel.invokeMethod("valueChanged", arguments: ["index": index])
 	}
 }
